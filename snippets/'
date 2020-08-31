@@ -1,0 +1,116 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <string.h>
+
+#define MAXLEN 256
+#define MAXWORDS 100000
+
+char *lines[MAXWORDS];
+
+typedef struct BstNode {
+    struct BstNode *less;
+    struct BstNode *more;
+    char *string;
+} BstNode;
+
+BstNode *makeBstNode(char *string) {
+    BstNode *np = (BstNode *) malloc(sizeof(BstNode));
+    np->less = NULL;
+    np->more = NULL;
+    char *sp = (char *) malloc(sizeof(char) * strlen(string) + 1);
+    np->string = sp;
+    return np;
+}
+
+void insert(BstNode *np, char *string) {
+    // Initialize new BstNode
+    int cmp = strcmp(np->string, string);
+    if (cmp < 0) {
+        if (np->less == NULL) {
+            BstNode *new = makeBstNode(string);
+            np->less = new;
+        } else {
+            insert(np->less, string);
+        }
+    } else if (cmp > 0) {
+        if (np->more == NULL) {
+            BstNode *new = makeBstNode(string);
+            np->more = new;
+        } else {
+            insert(np->more, string);
+        }
+    }
+}
+
+int contains(BstNode *np, char *string) {
+    int cmp = strcmp(np->string, string);
+    if (cmp < 0) {
+        if (np->less == NULL) {
+            return 0;
+        } else {
+            return contains(np->less, string);
+        }
+    } else if (cmp > 0) {
+        if (np->more == NULL) {
+            return 0;
+        } else {
+            return contains(np->more, string);
+        }
+    } else {
+        return 1;
+    }
+}
+
+int naiveDupCheck(char *a[], int len) {
+    int m, n;
+    for (m = 0; m < len; m++) {
+        for (n = 0; n < len; n++) {
+            if (m == n) {
+                continue;
+            }
+            if (a[m] == a[n]) {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+int dupCheck(char *a[], int len) {
+    BstNode *bstp = makeBstNode(a[0]);
+    int n;
+    for (n = 1; n < len; n++) {
+        insert(bstp, a[n]);
+    }
+    for (n = 1; n < len; n++) {
+        if (contains(bstp, a[n])) {
+            printf("%s\n", a[n]);
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int main() {
+    char line[MAXLEN];
+    int lineno = 0;
+    FILE *fp = fopen("dictionary.txt", "r");
+    printf("Starting loading in words...\n");
+    while (fgets(line, MAXLEN, fp) > 0) {
+        int len = strlen(line);
+        line[len-1] = '\0'; // Strip newline
+        char *newline = (char *) malloc(sizeof(char) * len);
+        strcpy(newline, line);
+        lines[lineno] = newline;
+        lineno += 1;
+    }
+    int dups;
+    printf("Done loading in words...\n");
+    printf("Starting naive duplicate check...\n");
+    //dups = naiveDupCheck(lines, lineno);
+    printf("Duplicate? %d\n", dups);
+    printf("Starting fast duplicate check...\n");
+    dups = dupCheck(lines, lineno);
+    printf("Duplicate? %d\n", dups);
+}
