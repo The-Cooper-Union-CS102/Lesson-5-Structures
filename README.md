@@ -391,6 +391,8 @@ brings us to an important built in C function.
 
 ## Memory Allocation
 
+### `malloc`
+
 In order to create objects based on user input, we need to do something called
 "dynamically allocating memory".  This means that for once, the amount of space
 we are going to use in a program is not known when we compile it.  This can
@@ -492,6 +494,65 @@ beginner, so let's go through it in detail.
 6. While the "current" pointer has a valid "next" pointer:
     1. Print the contents of the "next" pointer.
     2. Set the "current" pointer to the "next" pointer.
+
+### `free`
+
+Now, it's not obvious that we did something wrong in the last example, lets
+think about it.  We asked our computer for a bunch of memory in which we can
+store our nodes.  We asked for it, and we never gave it back.  We could
+potentially keep asking for it over and over until our computer runs out of
+memory or just refuses to give us more.  This will happen naturally if a
+program which dynamically requests memory keeps running.
+
+We can give the memory back to the computer with the `free` function.  The
+`free` function is quite simple: it takes a pointer and returns nothing.  But
+it has actually given all the memory we took for that particular pointer and
+freed it, meaning it has given it back to the computer to use for other programs.
+If you use `malloc` without a corresponding `free` that is called a **memory leak**
+and that is typically very bad.
+
+let's take a look at a simple example of using this.
+
+```c
+// snippets/free.c
+#include <stdlib.h>
+#include <stdio.h>
+
+int main() {
+    int *a = malloc(sizeof(int) * 8);
+    a[7] = 5;
+    printf("%d\n", a[7]);
+    free(a); // 'a' is now a "Dangling Pointer"
+    printf("%d\n", a[7]); // Anything could happen
+    free(NULL); // Freeing a NULL pointer does nothing
+}
+```
+
+### `realloc`
+
+It is also a common operation to extend the amount of space you need.  One
+simple way of achieving this would be to `malloc` a new larger size, then
+copy all the contents of your smaller array into that, then free the original
+array, and reset the original pointer to point to the new array.  However, 
+this is a common enough operation that there is a built in function, `realloc`.
+
+The `realloc` function finds enough space for your new size and copies over all
+of your old stuff for you.  Here is an example:
+
+```c
+#include <stdlib.h>
+#include <stdio.h>
+
+int main() {
+    int *a = malloc(sizeof(int) * 8);
+    a[7] = 5;
+    a = realloc(a, sizeof(int) * 16);
+    printf("%d\n", a[7]);
+    a[15] = 15;
+    printf("%d\n", a[15]);
+}
+```
+
 
 ## Typedef
 
